@@ -1,19 +1,35 @@
+<div>
+  <p>{{ product.name }} - {{ product.price | currency }}</p>
+</div>
 <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="form">
   <div *ngFor="let extra of extras">
     {{ extra.name }}: 
     <div *ngIf="extra.type === 'OPEN'">
-      <input type="text" formControlName="{{extra.name}}">
+      <input type="text" formControlName="{{extra.idExtra}}">
     </div>
     <div *ngIf="extra.type === 'MULTIPLE'">
       <div *ngFor="let option of extra.options">
-        <input  type="checkbox" formControlName="{{extra.name}}_{{option.name}}"> {{ option.name }}
+        <input  type="checkbox" 
+          formControlName="{{extra.idExtra}}_{{option.idOption}}"
+          (change)="onChangeMultiple($event, option.price)"
+        > 
+          {{ option.name }} - {{ option.price | currency }}
       </div>
     </div>
     <div *ngIf="extra.type === 'UNIQUE'">
       <div *ngFor="let option of extra.options">
-        <input  type="radio" name="{{extra.name}}" formControlName="{{extra.name}}" value="{{option.idOption}}"> {{ option.name }}
+        <input  type="radio" name="{{extra.idExtra}}" formControlName="{{extra.idExtra}}" 
+        value="{{option.idOption}}"
+        (change)="onChangeUnique($event, option.price)"
+        > {{ option.name }} - {{ option.price | currency  }}
       </div>      
     </div>
+  </div>
+  <div>
+    Cantidad
+    <input type="number" formControlName="quantity" value="0" [(ngModel)]="quantity">
+    Costo
+    <input type="text" value="{{ (quantity * product.price) | currency }}" readonly>
   </div>
   <div *ngIf="form">
     <br><br>

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormControl, FormGroup } from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from './api.service';
 
 @Component({
@@ -10,39 +10,78 @@ import { ApiService } from './api.service';
 export class AppComponent implements OnInit {
   title = 'dynamic-forms';
   extras: any[] = [];
+  product: any;
 
   form: FormGroup;
+  quantity: number = 0;
 
   constructor(private api: ApiService) {}
 
   ngOnInit() {
     this.api.getProduct().subscribe((product) => {
       if (product) {
+        this.product = product;
         this.extras = product.extras;
+        let formAux: any = {};
+
+        this.InitializeForm(formAux);
+
         if (this.extras) {
-          let f: any = {};
           for (let i = 0; i < this.extras.length; i++) {
             if (this.extras[i].type === 'OPEN') {
-              f[this.extras[i].name] = new FormControl('');
+              this.createOpenField(formAux, this.extras[i].idExtra);
             } else if (this.extras[i].type === 'MULTIPLE') {
-              this.createChecks(f, this.extras[i].name, this.extras[i].options);
+              this.createMultipleField(
+                formAux,
+                this.extras[i].idExtra,
+                this.extras[i].options
+              );
             } else {
-              f[this.extras[i].name] = new FormControl();
+              this.createUniqueField(formAux, this.extras[i].idExtra);
             }
           }
-          this.form = new FormGroup(f);
+
+          this.form = new FormGroup(formAux);
         }
       }
     });
   }
 
-  createChecks(f: any, name: any, options: any[]) {
+  InitializeForm(form: any) {
+    form['quantity'] = new FormControl(0, [Validators.required]);
+  }
+
+  createOpenField(form: any, idExtra: any) {
+    form[idExtra] = new FormControl('');
+  }
+
+  createMultipleField(form: any, idExtra: any, options: any[]) {
     for (let option of options) {
-      f[`${name}_${option.name}`] = new FormControl(false);
+      form[`${idExtra}_${option.idOption}`] = new FormControl(false);
     }
   }
 
-  onSubmit() {
-    console.log(this.form);
+  createUniqueField(form: any, idExtra: any) {
+    form[idExtra] = new FormControl();
   }
+
+  onChangeMultiple(e, price: any) {
+    if (e.target.checked) {
+      this.product.price += price;
+    } else {
+      this.product.price -= price;
+    }
+  }
+
+  private prevPrice: any;
+  onChangeUnique(e, price: any) {
+    if (this.prevPrice) {
+      this.product.price -= this.prevPrice;
+    }
+
+    this.prevPrice = price;
+    this.product.price += price;
+  }
+
+  onSubmit() {}
 }
